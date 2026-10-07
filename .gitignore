@@ -1,0 +1,23 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.aws/
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+# Generated data, models and experiment runs
+Artifacts/
+logs/
+final_model/
+saved_models/
+prediction_output/
+mlruns/
+mlflow.db

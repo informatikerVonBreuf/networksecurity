@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+.venv
+venv
+__pycache__
+Artifacts
+logs
+final_model
+mlruns
+.codex
+.agents
+.aws
