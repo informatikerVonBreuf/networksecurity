@@ -7,6 +7,8 @@ from networksecurity.constant import training_pipeline
 
 
 class TrainingPipelineConfig:
+    """Allocate a unique artifact directory and the serving model directory."""
+
     def __init__(self, timestamp=None):
         timestamp = (timestamp or datetime.now()).strftime("%Y%m%d_%H%M%S_%f")
         self.pipeline_name = training_pipeline.PIPELINE_NAME
@@ -17,6 +19,8 @@ class TrainingPipelineConfig:
 
 
 class DataIngestionConfig:
+    """Configure data source names and raw snapshot/split paths."""
+
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_ingestion_dir: str = os.path.join(
             training_pipeline_config.artifact_dir, training_pipeline.DATA_INGESTION_DIR_NAME
@@ -36,9 +40,7 @@ class DataIngestionConfig:
             training_pipeline.DATA_INGESTION_INGESTED_DIR,
             training_pipeline.TEST_FILE_NAME,
         )
-        self.train_test_split_ratio: float = (
-            training_pipeline.DATA_INGESTION_TRAIN_TEST_SPLIT_RATION
-        )
+        self.train_test_split_ratio: float = training_pipeline.DATA_INGESTION_TRAIN_TEST_SPLIT_RATIO
         self.collection_name: str = os.getenv(
             "MONGO_COLLECTION", training_pipeline.DATA_INGESTION_COLLECTION_NAME
         )
@@ -48,6 +50,8 @@ class DataIngestionConfig:
 
 
 class DataValidationConfig:
+    """Configure validated data paths and the distribution report."""
+
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_validation_dir: str = os.path.join(
             training_pipeline_config.artifact_dir, training_pipeline.DATA_VALIDATION_DIR_NAME
@@ -78,6 +82,8 @@ class DataValidationConfig:
 
 
 class DataTransformationConfig:
+    """Configure numeric arrays and the fitted preprocessing artifact."""
+
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_transformation_dir: str = os.path.join(
             training_pipeline_config.artifact_dir, training_pipeline.DATA_TRANSFORMATION_DIR_NAME
@@ -100,6 +106,8 @@ class DataTransformationConfig:
 
 
 class ModelTrainerConfig:
+    """Configure the inference bundle path and minimum cross-validation F1."""
+
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.model_trainer_dir: str = os.path.join(
             training_pipeline_config.artifact_dir, training_pipeline.MODEL_TRAINER_DIR_NAME
@@ -109,7 +117,4 @@ class ModelTrainerConfig:
             training_pipeline.MODEL_TRAINER_TRAINED_MODEL_DIR,
             training_pipeline.MODEL_FILE_NAME,
         )
-        self.expected_accuracy: float = training_pipeline.MODEL_TRAINER_EXPECTED_SCORE
-        self.overfitting_underfitting_threshold = (
-            training_pipeline.MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD
-        )
+        self.expected_f1: float = training_pipeline.MODEL_TRAINER_EXPECTED_F1

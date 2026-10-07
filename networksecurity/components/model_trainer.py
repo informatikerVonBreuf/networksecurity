@@ -26,14 +26,17 @@ from networksecurity.utils.ml_utils.model.estimator import NetworkModel
 class ModelTrainer:
     """Persist a fitted inference bundle, comparable metrics and run metadata."""
 
-    def __init__(self, model_trainer_config, data_transformation_artifact):
+    def __init__(self, model_trainer_config, data_transformation_artifact, track=False):
+        self.track = track
         self.model_trainer_config = model_trainer_config
         self.data_transformation_artifact = data_transformation_artifact
 
     def track_mlflow(self, model, metrics, report):
         """Optionally log one experiment run to an explicitly configured tracking server."""
-        if not os.getenv("MLFLOW_TRACKING_URI"):
+        if not self.track:
             return
+        if not os.getenv("MLFLOW_TRACKING_URI"):
+            raise ValueError("Set MLFLOW_TRACKING_URI before requesting --track-mlflow.")
         import mlflow
 
         with mlflow.start_run():
@@ -70,7 +73,7 @@ class ModelTrainer:
         report = evaluate_models(X_train, y_train, models, params)
         name = max(report, key=report.get)
         best = models[name]
-        if report[name] < self.model_trainer_config.expected_accuracy:
+        if report[name] < self.model_trainer_config.expected_f1:
             raise ValueError("Cross-validation F1 is below the configured acceptance threshold.")
         train_metric = get_classification_score(y_train, best.predict(X_train))
         test_metric = get_classification_score(y_test, best.predict(x_test))

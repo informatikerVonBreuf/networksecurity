@@ -20,10 +20,11 @@ from networksecurity.logging.logger import logging
 class TrainingPipeline:
     """Run locally by default; remote services require explicit configuration."""
 
-    def __init__(self, source_csv=None, sync_s3=False):
+    def __init__(self, source_csv=None, sync_s3=False, track_mlflow=False):
         self.training_pipeline_config = TrainingPipelineConfig()
         self.source_csv = source_csv
         self.sync_s3 = sync_s3
+        self.track_mlflow = track_mlflow
 
     def run_pipeline(self):
         """Execute stages in dependency order and return the model artifact."""
@@ -41,7 +42,9 @@ class TrainingPipeline:
         transformation = DataTransformation(
             validation, DataTransformationConfig(config)
         ).initiate_data_transformation()
-        model = ModelTrainer(ModelTrainerConfig(config), transformation).initiate_model_trainer()
+        model = ModelTrainer(
+            ModelTrainerConfig(config), transformation, track=self.track_mlflow
+        ).initiate_model_trainer()
         if self.sync_s3:
             sync = S3Sync()
             sync.sync_folder_to_s3(

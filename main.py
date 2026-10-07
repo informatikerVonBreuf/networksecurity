@@ -15,8 +15,11 @@ def main():
     parser = argparse.ArgumentParser(description="Train the phishing classification pipeline.")
     parser.add_argument("--source-csv", help="Local labeled CSV; otherwise use MongoDB.")
     parser.add_argument("--sync-s3", action="store_true", help="Upload artifacts using AWS CLI.")
+    parser.add_argument(
+        "--track-mlflow", action="store_true", help="Log to configured MLflow server."
+    )
     args = parser.parse_args()
-    artifact = TrainingPipeline(args.source_csv, args.sync_s3).run_pipeline()
+    artifact = TrainingPipeline(args.source_csv, args.sync_s3, args.track_mlflow).run_pipeline()
     print(json.dumps(asdict(artifact), indent=2))
 
 

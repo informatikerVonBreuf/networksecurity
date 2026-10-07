@@ -1,5 +1,7 @@
 """Package metadata; runtime dependencies are listed in requirements.txt."""
+
 from pathlib import Path
+
 from setuptools import find_packages, setup
 
 setup(
