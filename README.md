@@ -153,6 +153,8 @@ ne sont pas inclus dans l’image.
 
 ## Pour aller plus loin
 
+- [Présentation complète : contexte, actions et résultats](docs/PRESENTATION_COMPLETE.md)
+- [Version pour LinkedIn](docs/LINKEDIN.md)
 - [Intégrations MongoDB, MLflow et S3](docs/INTEGRATIONS.md)
 - [Choix techniques et contrats entre les étapes](docs/ARCHITECTURE.md)
 - [Vérifications réalisées et limites connues](docs/VALIDATION.md)
