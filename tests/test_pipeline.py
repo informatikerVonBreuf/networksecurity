@@ -102,3 +102,38 @@ def test_api_predict_and_reject_invalid_csv(tmp_path, monkeypatch):
         assert result.status_code == 200 and "prediction" in result.text
         bad = client.post("/predict", files={"file": ("data.csv", "wrong\n1\n")})
         assert bad.status_code == 422
+
+
+def test_duplicate_features_never_cross_holdout_boundary(tmp_path):
+    from networksecurity.components.data_ingestion import DataIngestion
+    from networksecurity.entity.config_entity import DataIngestionConfig
+
+    config = DataIngestionConfig(TrainingPipelineConfig())
+    config.training_file_path = str(tmp_path / "train.csv")
+    config.testing_file_path = str(tmp_path / "test.csv")
+    data = pd.DataFrame({"a": np.repeat(np.arange(30), 3), "Result": np.repeat([1, -1] * 15, 3)})
+    DataIngestion(config).split_data_as_train_test(data)
+    train = pd.read_csv(config.training_file_path)
+    test = pd.read_csv(config.testing_file_path)
+    assert not set(train.a) & set(test.a)
+    assert len(train) + len(test) == len(data)
+
+
+def test_duplicate_features_never_cross_cv_boundary():
+    from sklearn.model_selection import StratifiedGroupKFold
+
+    x = pd.DataFrame({"a": np.repeat(np.arange(30), 3)})
+    y = np.repeat([0, 1] * 15, 3)
+    models = {"baseline": Pipeline([("classifier", DummyClassifier())])}
+    original_split = StratifiedGroupKFold.split
+    observed = []
+
+    def inspect_split(self, X, y, groups):
+        for train, validation in original_split(self, X, y, groups):
+            assert not set(X.iloc[train].a) & set(X.iloc[validation].a)
+            observed.append(1)
+            yield train, validation
+
+    with patch.object(StratifiedGroupKFold, "split", inspect_split):
+        evaluate_models(x, y, models, {"baseline": {}})
+    assert len(observed) == 3

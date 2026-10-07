@@ -4,8 +4,10 @@ import pickle
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import yaml
-from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.metrics import f1_score, make_scorer
+from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold
 
 
 def read_yaml_file(file_path):
@@ -48,10 +50,13 @@ def load_object(file_path):
 def evaluate_models(X_train, y_train, models, param):
     """Rank pipelines by training-only cross-validation F1; never inspect the holdout."""
     report = {}
-    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+    cv = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
+    groups = pd.util.hash_pandas_object(pd.DataFrame(X_train), index=False)
     for name, model in models.items():
-        search = GridSearchCV(model, param[name], scoring="f1", cv=cv, n_jobs=1)
-        search.fit(X_train, y_train)
+        search = GridSearchCV(
+            model, param[name], scoring=make_scorer(f1_score, zero_division=0), cv=cv, n_jobs=1
+        )
+        search.fit(X_train, y_train, groups=groups)
         models[name] = search.best_estimator_
         report[name] = float(search.best_score_)
     return report

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedGroupKFold
 
 from networksecurity.constant.training_pipeline import TARGET_COLUMN
 from networksecurity.entity.artifact_entity import DataIngestionArtifact
@@ -44,13 +44,17 @@ class DataIngestion:
         return dataframe
 
     def split_data_as_train_test(self, dataframe):
-        """Reserve 20 percent for final evaluation; preserve class proportions."""
-        train, test = train_test_split(
-            dataframe,
-            test_size=self.data_ingestion_config.train_test_split_ratio,
+        """Reserve approximately 20 percent; keep identical feature vectors in one partition."""
+        groups = pd.util.hash_pandas_object(dataframe.drop(columns=TARGET_COLUMN), index=False)
+        splitter = StratifiedGroupKFold(
+            n_splits=round(1 / self.data_ingestion_config.train_test_split_ratio),
+            shuffle=True,
             random_state=42,
-            stratify=dataframe[TARGET_COLUMN],
         )
+        train_indices, test_indices = next(
+            splitter.split(dataframe, dataframe[TARGET_COLUMN], groups)
+        )
+        train, test = dataframe.iloc[train_indices], dataframe.iloc[test_indices]
         for frame, path in [
             (train, self.data_ingestion_config.training_file_path),
             (test, self.data_ingestion_config.testing_file_path),
