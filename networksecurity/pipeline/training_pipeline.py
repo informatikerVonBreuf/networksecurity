@@ -1,4 +1,4 @@
-"""Orchestrate the four training stages with optional explicit S3 publication."""
+"""Enchaîner les étapes d’entraînement et les transferts optionnels vers S3."""
 
 import os
 
@@ -18,7 +18,7 @@ from networksecurity.logging.logger import logging
 
 
 class TrainingPipeline:
-    """Run locally by default; remote services require explicit configuration."""
+    """Exécuter le pipeline avec les options de source et de suivi choisies."""
 
     def __init__(self, source_csv=None, sync_s3=False, track_mlflow=False):
         self.training_pipeline_config = TrainingPipelineConfig()
@@ -27,12 +27,12 @@ class TrainingPipeline:
         self.track_mlflow = track_mlflow
 
     def run_pipeline(self):
-        """Execute stages in dependency order and return the model artifact."""
+        """Lancer chaque étape dans l’ordre et renvoyer le résultat de l’entraînement."""
         config = self.training_pipeline_config
         bucket = os.getenv("TRAINING_BUCKET_NAME")
         if self.sync_s3 and not bucket:
-            raise ValueError("Set TRAINING_BUCKET_NAME before requesting --sync-s3.")
-        logging.info("Starting training run %s", config.timestamp)
+            raise ValueError("Renseignez TRAINING_BUCKET_NAME avant d’utiliser --sync-s3.")
+        logging.info("Début de l’entraînement %s", config.timestamp)
         ingestion = DataIngestion(
             DataIngestionConfig(config), self.source_csv
         ).initiate_data_ingestion()
@@ -53,5 +53,5 @@ class TrainingPipeline:
             sync.sync_folder_to_s3(
                 config.model_dir, f"s3://{bucket}/final_model/{config.timestamp}"
             )
-        logging.info("Training completed: %s", model)
+        logging.info("Entraînement terminé : %s", model)
         return model

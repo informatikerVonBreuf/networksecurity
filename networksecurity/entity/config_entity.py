@@ -1,4 +1,4 @@
-"""Build stage-specific artifact paths for a unique training run."""
+"""Construire les chemins de sortie de chaque étape d’un entraînement."""
 
 import os
 from datetime import datetime
@@ -7,7 +7,7 @@ from networksecurity.constant import training_pipeline
 
 
 class TrainingPipelineConfig:
-    """Allocate a unique artifact directory and the serving model directory."""
+    """Définir un dossier d’artefacts unique et le dossier du modèle de service."""
 
     def __init__(self, timestamp=None):
         timestamp = (timestamp or datetime.now()).strftime("%Y%m%d_%H%M%S_%f")
@@ -19,7 +19,7 @@ class TrainingPipelineConfig:
 
 
 class DataIngestionConfig:
-    """Configure data source names and raw snapshot/split paths."""
+    """Définir la source de données et les chemins des partitions."""
 
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_ingestion_dir: str = os.path.join(
@@ -50,7 +50,7 @@ class DataIngestionConfig:
 
 
 class DataValidationConfig:
-    """Configure validated data paths and the distribution report."""
+    """Définir les chemins des données validées et du rapport de distribution."""
 
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_validation_dir: str = os.path.join(
@@ -82,7 +82,7 @@ class DataValidationConfig:
 
 
 class DataTransformationConfig:
-    """Configure numeric arrays and the fitted preprocessing artifact."""
+    """Définir les chemins des tableaux NumPy et du prétraitement."""
 
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.data_transformation_dir: str = os.path.join(
@@ -106,7 +106,7 @@ class DataTransformationConfig:
 
 
 class ModelTrainerConfig:
-    """Configure the inference bundle path and minimum cross-validation F1."""
+    """Définir le chemin du modèle et le F1 minimal de validation croisée."""
 
     def __init__(self, training_pipeline_config: TrainingPipelineConfig):
         self.model_trainer_dir: str = os.path.join(

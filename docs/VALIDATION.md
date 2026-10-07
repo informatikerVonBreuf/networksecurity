@@ -1,42 +1,59 @@
-# V?rifications de la pr?paration
+# Vérifications et limites
 
-V?rification locale effectu?e le 7 octobre 2026. Environnement : Python 3.13.11,
-scikit-learn 1.7.1 et pandas 2.3.3. Les m?triques et le hash du CSV sont conserv?s dans
-`results.json` ; les versions du rapport correspondent ? cette mesure, pas n?cessairement
-aux prochaines installations utilisant les plages de d?pendances.
+Les mesures locales ont été réalisées le **7 octobre 2026**, avec Python 3.13.11,
+scikit-learn 1.7.1 et pandas 2.3.3. Le rapport [results.json](results.json) contient
+les métriques détaillées, l’empreinte du CSV et le contrôle des partitions.
 
-## V?rifications pass?es
+## Vérifications réalisées
 
-- `ruff check .` et `ruff format --check .`.
-- Huit tests automatis?s : noms de colonnes, cibles et infinis, F1 de s?lection,
-  ajustement du pr?traitement ? l'int?rieur des plis, bundle s?rialis?, r?ponses API,
-  s?paration des doublons entre train/test et entre les plis de CV.
-- Entra?nement complet local, depuis le CSV source jusqu'au bundle d'inf?rence.
-- Pr?diction batch sur un CSV de d?monstration et sur l'exemple fourni initialement.
-- Pr?diction API avec le mod?le r?ellement entra?n? via le client de test FastAPI.
-- V?rification du d?p?t distant par Git et par l'API GitHub.
-- CI de l'?tape API r?ussie sur GitHub, incluant la construction Docker ; la CI du
-  dernier commit doit aussi ?tre v?rifi?e dans l'onglet Actions.
+| Vérification | Résultat |
+| --- | --- |
+| Lint et formatage Ruff | Réussis |
+| Tests automatisés | 8 tests réussis |
+| Entraînement complet sur le CSV fourni | Réussi |
+| Prédiction depuis un CSV | Réussie |
+| API avec le modèle entraîné | Réponse HTTP 200 |
+| Chevauchement des groupes entraînement/test | Aucun |
+| CI et construction Docker | Réussies dans GitHub Actions |
 
-Les deux premiers commits sont des ?tapes incompl?tes : leurs workflows peuvent ?chouer
-par absence de tests ou de composants complets. La branche finale est la r?f?rence.
+[Workflow de référence](https://github.com/informatikerVonBreuf/networksecurity/actions/runs/37653581840),
+sur le commit `9548ba8`. L’état de la version actuelle est indiqué par le badge du README.
 
-## R?sultats corrig?s
+Les tests vérifient les colonnes attendues, les cibles et les valeurs infinies, la métrique
+de sélection, l’ajustement du prétraitement dans les plis, la sérialisation du modèle,
+les réponses de l’API et la séparation des doublons entre partitions.
 
-Random Forest : F1 test 0,9593 ; pr?cision 0,9584 ; rappel 0,9601.
-Le F1 train est 0,9909 : cet ?cart appelle une ?valuation externe, plut?t qu'une promesse
-de performance en production. Le score initial de 0,9774, mesur? avant le regroupement
-des doublons, a ?t? remplac? par cette ?valuation corrig?e.
+## Résultats de l’évaluation
 
-## Limites des v?rifications
+| Mesure | Valeur |
+| --- | ---: |
+| F1 moyen en validation croisée | 0,9544 |
+| F1 sur l’entraînement | 0,9909 |
+| F1 sur le test | 0,9593 |
+| Précision sur le test | 0,9584 |
+| Rappel sur le test | 0,9601 |
 
-Le moteur Docker local n'?tait pas d?marr? ; le build a ?t? v?rifi? dans GitHub Actions.
-Aucune connexion r?elle ? MongoDB, aucun serveur MLflow ni synchronisation AWS/S3 n'a
-?t? utilis?. Aucun d?ploiement AWS n'est annonc?. La provenance/licence du fichier source
-et le sens m?tier des classes restent ? confirmer. Le mod?le n'est pas test? sur de
-nouvelles campagnes de phishing et le CSV de d?mo n'est pas une ?valuation ind?pendante.
+Le test contient 2 157 lignes et l’entraînement 8 898 lignes. Aucun groupe de
+caractéristiques identiques n’est présent dans les deux partitions.
 
-## Reproduire
+Le premier score de test, 0,9774, avait été obtenu avant le regroupement des doublons.
+Il a été remplacé par le résultat corrigé. L’écart entre entraînement et test mérite
+une évaluation sur de nouvelles données.
+
+## Ce que ces vérifications ne couvrent pas
+
+MongoDB, MLflow et S3 n’ont pas été utilisés sur des services réels. Le moteur Docker
+local n’était pas démarré ; la construction a été vérifiée dans GitHub Actions.
+
+Le CSV est un jeu historique dont la provenance et les droits de redistribution restent
+à préciser. Il contient 64 groupes de caractéristiques aux cibles contradictoires.
+Le sens métier des classes doit être confirmé avec la source. Les métriques actuelles
+ne mesurent pas la détection de campagnes de phishing récentes.
+
+Les dépendances utilisent des plages de versions. Les versions de la mesure sont
+consignées, mais l’installation n’est pas verrouillée intégralement.
+
+## Reproduire les vérifications
 
 ```powershell
 python -m pip install -r requirements-dev.txt
@@ -45,9 +62,8 @@ python -m ruff format --check .
 python -m pytest -q --basetemp=.pytest_tmp
 python main.py --source-csv Network_Data/phisingData.csv
 python scripts/export_results.py
-python scripts/make_demo_csv.py
-python -m networksecurity.pipeline.batch_prediction prediction_output/demo.csv prediction_output/predictions.csv
+python -m networksecurity.pipeline.batch_prediction examples/predict.csv prediction_output/results.csv
 ```
 
-Le r?pertoire temporaire des tests est plac? dans le projet pour ?viter une erreur de
-droits rencontr?e avec le r?pertoire temporaire global Windows. Il est ignor? par Git.
+Le dossier temporaire `.pytest_tmp/` reste dans le projet et est ignoré par Git.
+Cela évite les problèmes de droits rencontrés avec le répertoire temporaire Windows.

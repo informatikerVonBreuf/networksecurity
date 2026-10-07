@@ -1,4 +1,4 @@
-"""Configure console and flat per-process log files for the CLI pipeline."""
+"""Écrire les journaux du pipeline dans la console et dans un fichier."""
 
 import logging
 from datetime import datetime

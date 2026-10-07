@@ -1,4 +1,4 @@
-"""Batch CSV prediction using the same inference bundle as the API."""
+"""Prédire depuis un CSV avec le même modèle que l’API."""
 
 import argparse
 from pathlib import Path
@@ -9,7 +9,7 @@ from networksecurity.utils.main_utils.utils import load_object
 
 
 def predict_csv(input_path, output_path, model_path="final_model/model.pkl"):
-    """Validate inputs, add predictions and write a CSV without an index column."""
+    """Ajouter les prédictions au CSV et enregistrer le résultat sans index."""
     frame = pd.read_csv(input_path)
     frame["prediction"] = load_object(model_path).predict(frame)
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -18,8 +18,10 @@ def predict_csv(input_path, output_path, model_path="final_model/model.pkl"):
 
 
 def main():
-    """Expose batch inference as python -m networksecurity.pipeline.batch_prediction."""
-    parser = argparse.ArgumentParser(description="Predict classes from a feature-only CSV.")
+    """Lire les chemins du CSV d’entrée et du fichier de sortie."""
+    parser = argparse.ArgumentParser(
+        description="Prédire les classes depuis un CSV sans colonne cible."
+    )
     parser.add_argument("input")
     parser.add_argument("output")
     args = parser.parse_args()

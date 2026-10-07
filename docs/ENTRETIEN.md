@@ -1,91 +1,108 @@
-# Pr?sentation en entretien
+# Présenter le projet en entretien
 
-## Pitch de 90 secondes
+L’objectif est de montrer le parcours des données jusqu’à la prédiction, puis de
+justifier les choix qui rendent l’évaluation fiable.
 
-? Ce projet montre comment transformer un entra?nement de classification de sites web
-? partir de caract?ristiques num?riques en un pipeline reproductible. Il s?pare
-l'ingestion, la validation, la pr?paration des donn?es, la s?lection des mod?les et
-l'inf?rence. Le mode local me permet de d?montrer le parcours complet sans cloud.
+## Présentation courte
 
-Un point cl? est la qualit? de l'?valuation : les caract?ristiques identiques restent
-dans une seule partition et l'imputation est ajust?e ? l'int?rieur de chaque pli de
-validation crois?e. Le mod?le est choisi sur le F1 de CV ; le test est r?serv? ?
-l'?valuation finale. Le r?sultat est enregistr? avec son pr?traitement et le contrat
-des colonnes, puis servi par une API FastAPI.
+> Le projet porte sur la classification de sites web à partir de 30 caractéristiques
+> numériques. Le pipeline charge les données, vérifie leur schéma, compare plusieurs
+> modèles et enregistre le modèle retenu avec son prétraitement.
+>
+> La partie la plus importante est l’évaluation. Le jeu contient beaucoup de doublons ;
+> je les garde dans le même groupe pour qu’un exemple identique ne se retrouve pas en
+> entraînement et en test. L’imputation est également apprise à l’intérieur de chaque
+> pli de validation croisée. Le modèle est choisi sur le F1 de validation, puis évalué
+> sur le jeu de test réservé.
+>
+> Le résultat est utilisé par une API FastAPI et une commande de prédiction CSV.
+> La CI vérifie le code, les tests et la construction Docker. MongoDB, MLflow et S3
+> sont prévus comme intégrations optionnelles.
 
-Le projet poss?de des tests automatis?s et une CI. MongoDB, MLflow et S3 sont des
-int?grations optionnelles. Je distingue cette d?monstration d'un service de production :
-le monitoring continu, l'authentification et la promotion des mod?les restent ? construire. ?
+## Démonstration en sept minutes
 
-Adapter ce texte ? ce que tu sais effectivement expliquer. La base para?t p?dagogique ;
-ne pas revendiquer des d?ploiements cloud ou une cr?ation enti?rement originale si ce
-n'est pas ton exp?rience. Les commits refl?tent la pr?paration actuelle du projet.
+| Temps | Support | Point à expliquer |
+| --- | --- | --- |
+| 0 à 1 min | README | Le problème et les 30 caractéristiques d’entrée |
+| 1 à 2 min | Schéma et données | Encodage de la cible, doublons et annotations contradictoires |
+| 2 à 4 min | Ingestion et entraînement | Découpage par groupes et prétraitement dans les plis |
+| 4 à 5 min | Rapport de résultats | F1 de validation croisée et F1 sur le test |
+| 5 à 6 min | API | Charger un CSV et lire la réponse |
+| 6 à 7 min | Tests et GitHub Actions | Ce qui est vérifié et ce qui reste à construire |
 
-## Parcours de pr?sentation de 7 minutes
+Avant l’entretien, installer les dépendances, entraîner le modèle et lancer l’API.
+Garder `examples/predict.csv` prêt à charger. La commande de prédiction CSV permet
+de poursuivre la démonstration si le navigateur pose problème.
 
-| Temps | Montrer | Message |
-|---|---|---|
-| 0?1 min | README et probl?me | Classification sur 30 caract?ristiques ; pas un scanner d'URL |
-| 1?2 min | Sch?ma et donn?es | Cibles -1/1, doublons et annotations contradictoires |
-| 2?4 min | Ingestion puis entra?nement | Split/CV par groupes et imputation dans chaque pli |
-| 4?5 min | `docs/results.json` | Mod?le retenu, F1 CV et test, limites de g?n?ralisation |
-| 5?6 min | `/docs` puis `/predict` | M?me bundle pour entra?nement et inf?rence |
-| 6?7 min | Tests et workflow | V?rifications r?elles ; ?tapes vers la production |
+## Questions à préparer
 
-Pr?parer l'environnement et entra?ner avant l'entretien. G?n?rer le CSV de d?monstration,
-lancer Uvicorn, garder le README et les r?sultats ouverts. Montrer une erreur 422 avec un
-CSV mal form? si le temps le permet. En solution de secours, utiliser la pr?diction batch.
-Les cinq exemples de d?monstration viennent des donn?es sources : ils ne constituent pas
-un test ind?pendant de performance.
+### Pourquoi choisir le F1 ?
 
-## Questions fr?quentes
+Le projet traite une classification binaire. Le F1 combine la précision et le rappel
+de la classe positive. Le choix final d’une métrique dépendrait du coût d’un faux
+positif et d’un faux négatif, ainsi que du sens confirmé des labels.
 
-**Pourquoi le F1 et pas R? ?**
-Il s'agit d'une classification binaire. Le F1 combine pr?cision et rappel de la classe
-positive. Le choix d?finitif d?pend du co?t d'un faux positif/faux n?gatif et de la
-signification confirm?e des labels. Le code initial utilisait R? : cela a ?t? corrig?.
+R² est une métrique de régression ; son utilisation dans la version initiale a été
+remplacée par une comparaison sur le F1.
 
-**Comment ?vites-tu les fuites de donn?es ?**
-Le holdout n'intervient pas dans le choix du mod?le ; les doublons restent group?s,
-y compris dans la CV ; le pr?traitement est appris uniquement sur chaque sous-ensemble
-d'entra?nement. Cela ne remplace pas une ?valuation temporelle ou externe.
+### Comment éviter les fuites de données ?
 
-**Pourquoi garder les labels contradictoires ?**
-La source ne fournit pas de r?gle fiable pour les d?partager. Les garder dans le m?me
-groupe ?vite de les disperser entre partitions ; ils restent un probl?me d'annotation
-? investiguer. Je ne les corrige pas arbitrairement.
+Trois précautions sont appliquées : réserver le test jusqu’à l’évaluation finale,
+garder les exemples identiques dans un seul groupe et ajuster le prétraitement à
+l’intérieur de chaque pli. Une évaluation sur une autre source reste nécessaire
+pour tester la généralisation.
 
-**Pourquoi l'imputation KNN ?**
-Elle reprend une approche de la base du projet et permet de traiter les valeurs
-manquantes futures. Le fichier actuel n'a pas de NaN. Je comparerais en production
-une imputation plus simple, un indicateur de valeurs manquantes et le co?t de KNN.
+### Pourquoi conserver les labels contradictoires ?
 
-**Comment garantis-tu la coh?rence de l'inf?rence ?**
-Le bundle s?rialis? contient le pr?traitement ajust?, le classifieur et les noms des
-colonnes. L'API et la CLI batch utilisent ce m?me objet ; un mauvais sch?ma est rejet?.
+La source ne donne pas de règle fiable pour départager ces annotations. Les corriger
+au hasard ajouterait une hypothèse non vérifiée. Le code les garde ensemble dans les
+partitions et le rapport signale les 64 groupes concernés.
 
-**Qu'apporte MLflow ?**
-L'int?gration journalise les m?triques, la comparaison CV et le mod?le dans un run,
-uniquement si elle est demand?e. Le registre, la promotion et le d?ploiement du mod?le
-ne sont pas impl?ment?s ni d?montr?s sur un serveur r?el dans cette pr?paration.
+### Pourquoi utiliser une imputation KNN ?
 
-**Est-ce du monitoring de d?rive ?**
-Le rapport actuel compare les distributions train/test par KS. Il s'agit d'un diagnostic
-de donn?es, pas d'un suivi dans le temps. Les caract?ristiques discr?tes et les tests
-multiples limitent l'interpr?tation des p-values.
+Ce choix reprend le prétraitement de la base pédagogique et permet de traiter des
+valeurs manquantes. Le CSV fourni n’en contient pas. Une comparaison avec une imputation
+simple serait utile avant de traiter davantage de données.
 
-**Qu'est-ce qui est test? en CI ?**
-Lint et formatage, sch?ma, fronti?res de s?paration des doublons, apprentissage du
-pr?traitement par pli, s?rialisation et API, puis construction de l'image Docker.
-Les syst?mes MongoDB/MLflow/AWS n?cessitent des tests d'int?gration s?par?s.
+### Comment assurer la cohérence des prédictions ?
 
-**Comment ferais-tu un d?ploiement fiable ?**
-Image versionn?e par commit, donn?es et mod?le versionn?s, registre avec crit?res de
-promotion, tests de smoke, d?ploiement progressif, observabilit? et rollback. Ce sont
-les prochaines ?tapes ; la CI actuelle ne d?ploie pas de service AWS.
+Le prétraitement ajusté et le classifieur sont enregistrés ensemble. L’API et la
+commande CSV chargent le même objet et vérifient les colonnes d’entrée. Elles ne
+réajustent pas le prétraitement sur les nouvelles données.
 
-## Travail ? savoir expliquer sans aide
+### Que fait l’intégration MLflow ?
 
-Ex?cuter la d?mo, retracer un artefact dans les quatre ?tapes, justifier le groupement
-des doublons, expliquer la diff?rence CV/test et montrer un test qui d?tecte une
-r?gression. ?viter de m?moriser un score isol? : utiliser le rapport mesur? actuel.
+Avec l’option `--track-mlflow`, elle enregistre les métriques, les scores de validation
+croisée et le modèle dans un run. Le registre de modèles et la promotion automatique
+restent à ajouter. Cette intégration n’a pas été testée sur un serveur réel pendant
+la préparation.
+
+### Le rapport KS constitue-t-il un suivi de dérive ?
+
+Il compare les distributions de l’entraînement et du test à un instant donné.
+Un suivi en production demanderait de conserver les distributions des nouvelles
+entrées et de les comparer dans le temps. Les p-values actuelles ont aussi des limites
+sur les variables discrètes et les tests multiples.
+
+### Que vérifie la CI ?
+
+Le formatage, le lint, huit tests et la construction de l’image Docker. Les tests
+couvrent le schéma, la séparation des doublons, le prétraitement dans les plis,
+la sérialisation et les réponses de l’API.
+
+### Comment passer à un déploiement de production ?
+
+Versionner l’image et le modèle, définir des critères de promotion, ajouter
+l’authentification et les quotas, puis surveiller les erreurs et les performances.
+Une procédure de retour au modèle précédent serait également nécessaire.
+
+## Repères pour la discussion
+
+Le modèle retenu est une Random Forest : **F1 de test 0,9593** et **F1 moyen de CV 0,9544**.
+Ces scores concernent les données fournies, pas des sites récents évalués en conditions
+réelles. Le fichier de démonstration sert à montrer une prédiction, pas à prouver la
+performance du modèle.
+
+Le projet part d’une base pédagogique associée à Krish Naik. Pour parler des contributions,
+s’appuyer sur les changements visibles dans l’historique : correction de l’évaluation,
+gestion des doublons, API, tests et documentation.

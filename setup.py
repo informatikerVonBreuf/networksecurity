@@ -1,4 +1,4 @@
-"""Package metadata; runtime dependencies are listed in requirements.txt."""
+"""Métadonnées du paquet et dépendances de requirements.txt."""
 
 from pathlib import Path
 

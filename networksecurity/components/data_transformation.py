@@ -1,4 +1,4 @@
-"""Prepare raw numeric arrays while preserving missing values for fold-local imputation."""
+"""Préparer les tableaux numériques avant l’imputation dans les plis de validation."""
 
 import numpy as np
 import pandas as pd
@@ -14,7 +14,7 @@ from networksecurity.utils.main_utils.utils import save_numpy_array_data
 
 
 class DataTransformation:
-    """Encode -1 as 0 and retain raw features to avoid cross-validation leakage."""
+    """Encoder la cible sans apprendre de prétraitement avant la validation croisée."""
 
     def __init__(self, data_validation_artifact, data_transformation_config):
         self.data_validation_artifact = data_validation_artifact
@@ -22,16 +22,16 @@ class DataTransformation:
 
     @staticmethod
     def read_data(file_path):
-        """Load a validated data split."""
+        """Lire une partition validée."""
         return pd.read_csv(file_path)
 
     @staticmethod
     def get_data_transformer_object():
-        """Build a fresh imputer; model selection fits one inside each CV fold."""
+        """Créer un imputer qui sera ajusté séparément dans chaque pli."""
         return Pipeline([("imputer", KNNImputer(**DATA_TRANSFORMATION_IMPUTER_PARAMS))])
 
     def initiate_data_transformation(self):
-        """Save raw arrays; the last column is the encoded target."""
+        """Enregistrer les tableaux avec la cible encodée dans la dernière colonne."""
         config = self.data_transformation_config
         for source, target in [
             (
@@ -44,7 +44,7 @@ class DataTransformation:
             labels = df[TARGET_COLUMN].replace(-1, 0)
             array = np.c_[df.drop(columns=TARGET_COLUMN).to_numpy(dtype=float), labels]
             save_numpy_array_data(target, array)
-        # The fitted preprocessing object is produced by the model trainer, after CV selection.
+        # Le prétraitement ajusté sera enregistré après la sélection du modèle.
         return DataTransformationArtifact(
             config.transformed_object_file_path,
             config.transformed_train_file_path,

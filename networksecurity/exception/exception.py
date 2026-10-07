@@ -1,8 +1,8 @@
-"""Legacy contextual exception retained for integrations using this import path."""
+"""Exception avec le fichier et la ligne à l’origine de l’erreur."""
 
 
 class NetworkSecurityException(Exception):
-    """Add traceback context while remaining safe outside an active exception handler."""
+    """Ajouter le contexte de l’erreur, lorsqu’une traceback est disponible."""
 
     def __init__(self, error_message, error_details=None):
         traceback = error_details.exc_info()[2] if error_details else None

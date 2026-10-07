@@ -25,3 +25,6 @@ mlflow.db
 # Local verification scratch space
 .pytest_tmp/
 .validated_env/
+
+# Local visual checks
+.preview/

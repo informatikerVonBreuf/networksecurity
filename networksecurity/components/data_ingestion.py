@@ -1,4 +1,4 @@
-"""Load a local CSV or MongoDB collection and create a reproducible holdout."""
+"""Charger les données et réserver un jeu de test sans chevauchement des doublons."""
 
 import os
 from pathlib import Path
@@ -12,14 +12,14 @@ from networksecurity.entity.artifact_entity import DataIngestionArtifact
 
 
 class DataIngestion:
-    """Persist the raw snapshot and stratified train/test split."""
+    """Conserver les données sources et les partitions d’entraînement et de test."""
 
     def __init__(self, data_ingestion_config, source_csv=None):
         self.data_ingestion_config = data_ingestion_config
         self.source_csv = source_csv
 
     def export_collection_as_dataframe(self):
-        """Read a snapshot; MongoDB connections are opened only when requested."""
+        """Lire la source choisie ; ouvrir MongoDB uniquement pour une ingestion distante."""
         if self.source_csv:
             df = pd.read_csv(self.source_csv)
         else:
@@ -27,24 +27,26 @@ class DataIngestion:
 
             uri = os.getenv("MONGO_DB_URL")
             if not uri:
-                raise ValueError("Set MONGO_DB_URL or pass --source-csv.")
+                raise ValueError(
+                    "Renseignez MONGO_DB_URL ou indiquez un fichier avec --source-csv."
+                )
             with MongoClient(uri, serverSelectionTimeoutMS=5000) as client:
                 config = self.data_ingestion_config
                 df = pd.DataFrame(list(client[config.database_name][config.collection_name].find()))
             df = df.drop(columns=["_id"], errors="ignore")
         if df.empty:
-            raise ValueError("The data source is empty.")
+            raise ValueError("La source de données est vide.")
         return df.replace("na", np.nan)
 
     def export_data_into_feature_store(self, dataframe):
-        """Save the raw snapshot used by this training run."""
+        """Enregistrer une copie des données utilisées pour cet entraînement."""
         path = Path(self.data_ingestion_config.feature_store_file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         dataframe.to_csv(path, index=False)
         return dataframe
 
     def split_data_as_train_test(self, dataframe):
-        """Reserve approximately 20 percent; keep identical feature vectors in one partition."""
+        """Réserver environ 20 % des lignes en gardant les caractéristiques identiques ensemble."""
         groups = pd.util.hash_pandas_object(dataframe.drop(columns=TARGET_COLUMN), index=False)
         splitter = StratifiedGroupKFold(
             n_splits=round(1 / self.data_ingestion_config.train_test_split_ratio),
@@ -63,7 +65,7 @@ class DataIngestion:
             frame.to_csv(path, index=False)
 
     def initiate_data_ingestion(self):
-        """Execute ingestion and return paths consumed by validation."""
+        """Charger les données et transmettre les chemins des partitions à la validation."""
         df = self.export_collection_as_dataframe()
         self.export_data_into_feature_store(df)
         self.split_data_as_train_test(df)

@@ -1,4 +1,4 @@
-"""Regression tests for validation, leakage boundaries and inference contracts."""
+"""Tests du schéma, de l’évaluation et des prédictions."""
 
 from pathlib import Path
 from unittest.mock import patch
@@ -26,7 +26,7 @@ def test_schema_rejects_wrong_names_with_same_column_count():
     frame = pd.read_csv("Network_Data/phisingData.csv", nrows=5)
     assert validator().validate_number_of_columns(frame)
     frame = frame.rename(columns={"URL_Length": "incorrect"})
-    with pytest.raises(ValueError, match="Columns"):
+    with pytest.raises(ValueError, match="colonnes"):
         validator().validate_frame(frame)
 
 
@@ -37,12 +37,12 @@ def test_schema_rejects_missing_target_and_infinite_features():
         validator().validate_frame(frame)
     frame.loc[0, "Result"] = -1
     frame.loc[0, "URL_Length"] = np.inf
-    with pytest.raises(ValueError, match="Infinite"):
+    with pytest.raises(ValueError, match="infinie"):
         validator().validate_frame(frame)
 
 
 def test_cv_uses_classification_f1_and_fits_preprocessing_inside_folds():
-    # A majority-zero predictor has positive accuracy but zero positive-class F1.
+    # Prédire toujours zéro donne une accuracy positive, mais un F1 nul pour la classe 1.
     x = pd.DataFrame({"a": range(12)})
     y = np.array([0] * 9 + [1] * 3)
     models = {
@@ -54,7 +54,7 @@ def test_cv_uses_classification_f1_and_fits_preprocessing_inside_folds():
         )
     }
     with patch.object(SimpleImputer, "fit", autospec=True, wraps=SimpleImputer.fit) as fit:
-        # Wrap explicitly to preserve the real fitted estimator.
+        # Garder le véritable ajustement tout en observant la taille des plis.
         fit.side_effect = lambda self, X, y=None: original_fit(self, X, y)
         report = evaluate_models(x, y, models, {"baseline": {}})
         sizes = [len(call.args[1]) for call in fit.call_args_list]
@@ -78,7 +78,7 @@ def test_bundle_survives_serialization_and_reorders_columns(tmp_path):
     save_object(path, model)
     restored = load_object(path)
     np.testing.assert_array_equal(restored.predict(frame), restored.predict(frame[["b", "a"]]))
-    with pytest.raises(ValueError, match="columns"):
+    with pytest.raises(ValueError, match="colonnes"):
         restored.predict(frame.assign(Result=1))
 
 

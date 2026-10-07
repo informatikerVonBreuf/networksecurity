@@ -1,4 +1,4 @@
-"""Export the latest measured run and source-data audit for the interview documentation."""
+"""Exporter les résultats mesurés et les caractéristiques du jeu de données."""
 
 import hashlib
 import json
@@ -10,7 +10,7 @@ import sklearn
 
 
 def main():
-    """Copy metrics, dataset counts and dependency versions into a small tracked report."""
+    """Écrire le rapport de résultats avec les versions utilisées et l’audit des partitions."""
     frame = pd.read_csv("Network_Data/phisingData.csv")
     summary = json.loads(Path("final_model/metrics.json").read_text(encoding="utf-8"))
     features = frame.drop(columns="Result")
@@ -56,7 +56,7 @@ def main():
         "group_key": "hash of all 30 features, excluding the target",
     }
     Path("docs/results.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print("Exported docs/results.json")
+    print("Rapport enregistré dans docs/results.json.")
 
 
 if __name__ == "__main__":

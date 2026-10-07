@@ -1,4 +1,4 @@
-"""Validate the feature contract and report train/holdout distribution differences."""
+"""Vérifier le schéma et comparer les distributions des deux partitions."""
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from networksecurity.utils.main_utils.utils import read_yaml_file, write_yaml_fi
 
 
 class DataValidation:
-    """Reject incompatible data; drift is an informational diagnostic."""
+    """Arrêter le pipeline si le schéma est invalide et conserver le rapport de distribution."""
 
     def __init__(self, data_ingestion_artifact, data_validation_config):
         self.data_ingestion_artifact = data_ingestion_artifact
@@ -21,29 +21,29 @@ class DataValidation:
 
     @staticmethod
     def read_data(file_path):
-        """Read a persisted ingestion split."""
+        """Lire un CSV produit par l’ingestion."""
         return pd.read_csv(file_path)
 
     def validate_number_of_columns(self, dataframe):
-        """Check exact column names rather than only the number of YAML keys."""
+        """Vérifier le nombre et les noms des colonnes attendues."""
         expected = [name for item in self._schema_config["columns"] for name in item]
         return len(dataframe.columns) == len(expected) and set(dataframe.columns) == set(expected)
 
     def validate_frame(self, dataframe):
-        """Enforce numeric finite inputs and the original binary target encoding."""
+        """Contrôler les valeurs numériques, les infinis et les labels de la cible."""
         if not self.validate_number_of_columns(dataframe):
-            raise ValueError("Columns do not match data_schema/schema.yaml.")
+            raise ValueError("Les colonnes ne correspondent pas au schéma data_schema/schema.yaml.")
         values = dataframe.apply(pd.to_numeric, errors="raise")
         if np.isinf(values.to_numpy()).any():
-            raise ValueError("Infinite feature values are not supported.")
+            raise ValueError("Les caractéristiques ne doivent pas contenir de valeur infinie.")
         if values[TARGET_COLUMN].isna().any() or not set(values[TARGET_COLUMN]).issubset({-1, 1}):
-            raise ValueError("Result must contain only -1 and 1, with no missing target.")
+            raise ValueError("Result doit contenir uniquement -1 et 1, sans valeur manquante.")
         if values.drop(columns=TARGET_COLUMN).isna().all().any():
-            raise ValueError("A feature is entirely missing.")
+            raise ValueError("Une caractéristique ne contient aucune valeur.")
         return values
 
     def detect_dataset_drift(self, base_df, current_df, threshold=0.05):
-        """Save uncorrected KS p-values; discrete features limit their interpretation."""
+        """Écrire le rapport KS ; les p-values ne sont pas corrigées pour les tests multiples."""
         report = {}
         for column in base_df.columns:
             if column == TARGET_COLUMN:
@@ -54,7 +54,7 @@ class DataValidation:
         return not any(item["drift_status"] for item in report.values())
 
     def initiate_data_validation(self):
-        """Write validated copies and return their actual paths."""
+        """Enregistrer les copies validées et transmettre leurs chemins."""
         train = self.validate_frame(self.read_data(self.data_ingestion_artifact.trained_file_path))
         test = self.validate_frame(self.read_data(self.data_ingestion_artifact.test_file_path))
         self.detect_dataset_drift(train, test)

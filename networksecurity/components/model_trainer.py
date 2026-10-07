@@ -1,4 +1,4 @@
-"""Select a full pipeline using training CV and evaluate the winner on untouched test data."""
+"""Choisir le modèle par validation croisée, puis l’évaluer sur le jeu de test réservé."""
 
 import json
 import os
@@ -24,7 +24,7 @@ from networksecurity.utils.ml_utils.model.estimator import NetworkModel
 
 
 class ModelTrainer:
-    """Persist a fitted inference bundle, comparable metrics and run metadata."""
+    """Comparer les candidats et enregistrer le modèle avec son prétraitement."""
 
     def __init__(self, model_trainer_config, data_transformation_artifact, track=False):
         self.track = track
@@ -32,11 +32,11 @@ class ModelTrainer:
         self.data_transformation_artifact = data_transformation_artifact
 
     def track_mlflow(self, model, metrics, report):
-        """Optionally log one experiment run to an explicitly configured tracking server."""
+        """Enregistrer le modèle et les métriques dans MLflow si le suivi est demandé."""
         if not self.track:
             return
         if not os.getenv("MLFLOW_TRACKING_URI"):
-            raise ValueError("Set MLFLOW_TRACKING_URI before requesting --track-mlflow.")
+            raise ValueError("Renseignez MLFLOW_TRACKING_URI avant d’utiliser --track-mlflow.")
         import mlflow
 
         with mlflow.start_run():
@@ -46,7 +46,7 @@ class ModelTrainer:
             mlflow.sklearn.log_model(model, "model")
 
     def train_model(self, X_train, y_train, x_test, y_test):
-        """Fit fold-local preprocessing and select the highest mean CV F1."""
+        """Comparer les pipelines sur le F1 moyen de validation croisée."""
         estimators = {
             "Random Forest": RandomForestClassifier(random_state=42, n_jobs=1),
             "Decision Tree": DecisionTreeClassifier(random_state=42),
@@ -74,7 +74,7 @@ class ModelTrainer:
         name = max(report, key=report.get)
         best = models[name]
         if report[name] < self.model_trainer_config.expected_f1:
-            raise ValueError("Cross-validation F1 is below the configured acceptance threshold.")
+            raise ValueError("Le F1 de validation croisée est inférieur au seuil configuré.")
         train_metric = get_classification_score(y_train, best.predict(X_train))
         test_metric = get_classification_score(y_test, best.predict(x_test))
         features = [
@@ -86,7 +86,7 @@ class ModelTrainer:
         wrapper = NetworkModel(
             best.named_steps["preprocessor"], best.named_steps["classifier"], features
         )
-        # Publish only after all evaluation and optional tracking operations have succeeded.
+        # Enregistrer le modèle de service après l’évaluation et le suivi éventuel.
         metrics = {
             f"{split}_{key}": value
             for split, artifact in [("train", train_metric), ("test", test_metric)]
@@ -118,7 +118,7 @@ class ModelTrainer:
         )
 
     def initiate_model_trainer(self):
-        """Load prepared arrays and attach feature names for the fitted inference contract."""
+        """Lire les tableaux et rétablir les noms de colonnes avant l’entraînement."""
         config = self.data_transformation_artifact
         train = load_numpy_array_data(config.transformed_train_file_path)
         test = load_numpy_array_data(config.transformed_test_file_path)

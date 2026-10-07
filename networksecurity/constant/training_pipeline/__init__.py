@@ -1,4 +1,4 @@
-"""Shared dataset contract and artifact defaults; no deployment-specific identifiers."""
+"""Noms des colonnes, chemins d’artefacts et paramètres par défaut du pipeline."""
 
 import os
 
@@ -13,7 +13,7 @@ TEST_FILE_NAME = "test.csv"
 SCHEMA_FILE_PATH = os.path.join("data_schema", "schema.yaml")
 MODEL_FILE_NAME = "model.pkl"
 
-# MongoDB defaults can be overridden in .env; the local CSV path bypasses MongoDB.
+# Les variables .env remplacent ces valeurs pour une ingestion MongoDB.
 DATA_INGESTION_COLLECTION_NAME = "NetworkData"
 DATA_INGESTION_DATABASE_NAME = "networksecurity"
 DATA_INGESTION_DIR_NAME = "data_ingestion"
@@ -28,7 +28,7 @@ DATA_VALIDATION_DRIFT_REPORT_DIR = "drift_report"
 DATA_VALIDATION_DRIFT_REPORT_FILE_NAME = "report.yaml"
 PREPROCESSING_OBJECT_FILE_NAME = "preprocessing.pkl"
 
-# Missing values are retained in arrays and imputed inside each CV training fold.
+# Conserver les NaN jusqu’à l’imputation dans les plis de validation.
 DATA_TRANSFORMATION_DIR_NAME = "data_transformation"
 DATA_TRANSFORMATION_TRANSFORMED_DATA_DIR = "transformed"
 DATA_TRANSFORMATION_TRANSFORMED_OBJECT_DIR = "transformed_object"

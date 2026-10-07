@@ -1,4 +1,4 @@
-"""Training CLI: use --source-csv for a demo independent of cloud services."""
+"""Commande d’entraînement depuis un CSV local ou une collection MongoDB."""
 
 import argparse
 import json
@@ -10,13 +10,19 @@ from networksecurity.pipeline.training_pipeline import TrainingPipeline
 
 
 def main():
-    """Parse the data source and optional artifact upload, then execute one run."""
+    """Lire les options et lancer un entraînement."""
     load_dotenv()
-    parser = argparse.ArgumentParser(description="Train the phishing classification pipeline.")
-    parser.add_argument("--source-csv", help="Local labeled CSV; otherwise use MongoDB.")
-    parser.add_argument("--sync-s3", action="store_true", help="Upload artifacts using AWS CLI.")
+    parser = argparse.ArgumentParser(description="Entraîner le pipeline de classification.")
     parser.add_argument(
-        "--track-mlflow", action="store_true", help="Log to configured MLflow server."
+        "--source-csv", help="CSV local avec la cible ; sinon, lire la collection MongoDB."
+    )
+    parser.add_argument(
+        "--sync-s3", action="store_true", help="Archiver les artefacts sur S3 avec AWS CLI."
+    )
+    parser.add_argument(
+        "--track-mlflow",
+        action="store_true",
+        help="Enregistrer le modèle et les métriques dans le serveur MLflow configuré.",
     )
     args = parser.parse_args()
     artifact = TrainingPipeline(args.source_csv, args.sync_s3, args.track_mlflow).run_pipeline()

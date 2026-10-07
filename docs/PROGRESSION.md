@@ -1,19 +1,18 @@
-# Progression du projet
+# Étapes du projet
 
-Le dossier initial ne contenait pas de r?pertoire `.git`. Cet historique a ?t? cr??
-pendant la pr?paration ; il ne pr?tend pas reconstituer chronologiquement les travaux
-ant?rieurs. Les commits sont dat?s de leur ex?cution r?elle et publi?s par ?tapes.
+Le dossier fourni n’avait pas d’historique Git. Les commits ci-dessous suivent les étapes
+de sa mise en place et de sa préparation pour une démonstration.
 
-1. `chore: establish project skeleton and safe configuration` : structure, d?pendances,
-   environnement exemple, exclusions des fichiers g?n?r?s, Docker et workflow de qualit?.
-2. `fix: make training reproducible and remove model selection leakage` : pipeline,
-   sch?ma, donn?es sources, m?triques de classification et CV sans utilisation du test.
-3. `feat: add documented inference API and regression tests` : API, outils de d?mo,
-   tests, contrats document?s et suivi externe explicitement optionnel.
-4. `fix: keep duplicate feature groups out of evaluation folds` : correction issue de
-   l'audit des doublons, appliqu?e au holdout et ? la validation crois?e.
-5. `docs: prepare interview walkthrough and measured validation report` : README,
-   architecture, pr?sentation, limites et r?sultats mesur?s.
+| Commit | Étape | Changements |
+| --- | --- | --- |
+| `0a0a1bd` | Squelette | Dépendances, configuration, exclusions Git, Docker et workflow |
+| `2168235` | Entraînement | Pipeline, schéma, métriques de classification et sélection par CV |
+| `46d1fc5` | Inférence | API, prédiction CSV, scripts de démonstration et tests |
+| `7818844` | Doublons | Découpage par groupes en entraînement/test et en validation croisée |
+| `9548ba8` | Documentation | Architecture, présentation, vérifications et résultats mesurés |
 
-Les premi?res ?tapes du squelette sont incompl?tes par nature. La r?f?rence pour la
-d?monstration et les v?rifications est le dernier commit de la branche `main`.
+Les deux premiers commits sont des étapes intermédiaires : leur CI n’était pas encore
+complète. La branche `main` contient la version à utiliser pour la démonstration.
+
+La relecture des textes corrige leur encodage UTF-8 et simplifie la documentation.
+La page de résultats affiche un résumé du fichier et un tableau adapté aux petits écrans.

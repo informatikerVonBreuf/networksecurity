@@ -1,11 +1,11 @@
-"""Typed contracts passed between stages and returned by training."""
+"""Objets échangés entre les étapes du pipeline."""
 
 from dataclasses import dataclass
 
 
 @dataclass
 class DataIngestionArtifact:
-    """Raw training and holdout CSV paths."""
+    """Chemins des CSV d’entraînement et de test."""
 
     trained_file_path: str
     test_file_path: str
@@ -13,7 +13,7 @@ class DataIngestionArtifact:
 
 @dataclass
 class DataValidationArtifact:
-    """Schema acceptance, validated CSVs and an informational drift report."""
+    """Résultat de validation, fichiers validés et chemin du rapport de distribution."""
 
     validation_status: bool
     valid_train_file_path: str
@@ -25,7 +25,7 @@ class DataValidationArtifact:
 
 @dataclass
 class DataTransformationArtifact:
-    """Raw numeric arrays and the preprocessing path populated by training."""
+    """Tableaux numériques et chemin du prétraitement ajusté pendant l’entraînement."""
 
     transformed_object_file_path: str
     transformed_train_file_path: str
@@ -34,7 +34,7 @@ class DataTransformationArtifact:
 
 @dataclass
 class ClassificationMetricArtifact:
-    """Positive-class F1, precision and recall."""
+    """F1, précision et rappel de la classe positive."""
 
     f1_score: float
     precision_score: float
@@ -43,7 +43,7 @@ class ClassificationMetricArtifact:
 
 @dataclass
 class ModelTrainerArtifact:
-    """Saved inference bundle and train/holdout classification metrics."""
+    """Chemin du modèle et métriques sur l’entraînement et le test."""
 
     trained_model_file_path: str
     train_metric_artifact: ClassificationMetricArtifact
